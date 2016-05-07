@@ -68,7 +68,10 @@ namespace Twitch
         public void SendAction(string channel, string action)
         {
             if(m_client.IsConnected)
-                m_client.PrivMsg(channel, "\x01ACTION {0}\x01", action);
+                m_client.PrivMsg(channel, "\x0001ACTION {0}\x01", action);
+
+
+            //m_client.PrivMsg(channel, "\x01 ACTION {0}\x01", action);
         }
         public void SendAction(string destination, string format, params object[] arg)
         {
