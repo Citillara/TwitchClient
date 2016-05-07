@@ -11,6 +11,8 @@ namespace Twitch.Models
     {
         static readonly Regex r = new Regex(@"[^\u0000-\u007F]", RegexOptions.Compiled);
 
+        public bool IsWhisper = false;
+        public string WhisperChannel;
         public string Channel;
         public string Message;
         public string SenderName;

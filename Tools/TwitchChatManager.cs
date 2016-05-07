@@ -19,7 +19,7 @@ namespace Twitch.Tools
             botmasters.Add("lam0r_");
         }
 
-        public TwitchMessage ParseTwitchMessage(IrcClientOnPrivateMessageEventArgs args)
+        public TwitchMessage ParseTwitchMessageFromIrc(IrcClientOnPrivateMessageEventArgs args)
         {
             TwitchMessage retval = new TwitchMessage();
             string key = string.Concat(args.Channel, args.Name);
@@ -33,6 +33,14 @@ namespace Twitch.Tools
             retval.IsSubscriber = extra.IsSubscriber;
             retval.IsTurbo = extra.IsTurbo;
             retval.UserId = extra.UserId;
+
+            if (!args.Channel.StartsWith("#"))
+            {
+                retval.IsWhisper = true;
+                retval.Channel = args.Name;
+                retval.WhisperChannel = args.Channel;
+            }
+
 
             if (!string.IsNullOrEmpty(extra.DisplayName))
                 retval.SenderDisplayName = extra.DisplayName;

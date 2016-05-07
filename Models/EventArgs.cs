@@ -32,15 +32,4 @@ namespace Twitch.Models
         }
     }
 
-    public class TwitchClientOnMessageEventArgs : EventArgs
-    {
-        public TwitchMessage Message;
-        public bool IsWhisper;
-
-        public TwitchClientOnMessageEventArgs(TwitchMessage message, bool isWhisper)
-        {
-            Message = message;
-            IsWhisper = isWhisper;
-        }
-    }
 }
