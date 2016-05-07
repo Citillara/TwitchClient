@@ -31,9 +31,15 @@ namespace Twitch
         public delegate void TwitchClientPerformEventHandler(TwitchClient sender);
         public event TwitchClientPerformEventHandler OnPerform;
 
+        /// <summary>
+        /// If sending to a user as a message, it will automatically be converted to whisper
+        /// </summary>
+        public bool AutoDetectSendWhispers = false;
+
         public TwitchClient(string nickname, string password)
         {
             m_client = new IrcClient("irc.chat.twitch.tv", 80, nickname);
+            m_name = nickname;
             m_client.Password = password;
             m_client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
             m_client.OnDebug += m_client_OnDebug;
@@ -72,7 +78,10 @@ namespace Twitch
         public void SendMessage(string channel, string message)
         {
             if (m_client.IsConnected)
-                m_client.PrivMsg(channel, message);
+                if (AutoDetectSendWhispers && !channel.StartsWith("#"))
+                    SendWhisper(channel, message);
+                else 
+                    m_client.PrivMsg(channel, message);
         }
         public void SendMessage(string destination, string format, params object[] arg)
         {
