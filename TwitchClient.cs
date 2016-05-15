@@ -52,6 +52,7 @@ namespace Twitch
             m_client.OnPrivateMessage += m_client_OnPrivateMessage;
             m_client.OnQuit += m_client_OnQuit;
             m_client.OnUnknownCommand += m_client_OnUnknownCommand;
+            m_client.LogLevel = MessageLevel.Info;
         }
 
         public void Connect()
@@ -101,6 +102,7 @@ namespace Twitch
 
         void m_client_OnUnknownCommand(IrcClient sender, IrcMessage message)
         {
+            /*
             switch (message.Command)
             {
                 default:
@@ -108,7 +110,7 @@ namespace Twitch
                     Console.WriteLine(message);
                     Console.ForegroundColor = ConsoleColor.Gray;
                     break;
-            }
+            }*/
         }
 
         void m_client_OnQuit(IrcClient sender, IrcClientOnQuitEventArgs args)
@@ -141,7 +143,7 @@ namespace Twitch
 
         void m_client_OnNotice(IrcClient sender, IrcMessage args)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         void m_client_OnMode(IrcClient sender, IrcClientOnModeEventArgs args)
