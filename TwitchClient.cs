@@ -98,6 +98,11 @@ namespace Twitch
             if (m_client.IsConnected)
                 m_client.Join(channel);
         }
+        public void Part(string channel)
+        {
+            if (m_client.IsConnected)
+                m_client.Part(channel);
+        }
 
 
         void m_client_OnUnknownCommand(IrcClient sender, IrcMessage message)
