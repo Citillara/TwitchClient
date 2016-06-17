@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Twitch.Tools;
 using Twitch.Models;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -64,6 +63,10 @@ namespace Twitch
         {
             if (m_client.IsConnected)
                 m_client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
+        }
+        public void SendWhisper(string destination, string format, params object[] arg)
+        {
+            this.SendWhisper(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
         }
 
         public void SendAction(string channel, string action)

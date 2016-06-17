@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Twitch.Models;
 
-namespace Twitch.Tools
+namespace Twitch
 {
     class TwitchChatManager
     {

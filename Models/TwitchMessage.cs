@@ -26,7 +26,7 @@ namespace Twitch.Models
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("[{0}]" , Channel);
+            sb.AppendFormat("[{0}] " , Channel);
 
             if (UserType.HasFlag(TwitchUserTypes.Citillara))
                 sb.AppendFormat("[C] ");
