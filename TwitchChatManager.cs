@@ -31,8 +31,12 @@ namespace Twitch
             retval.SenderName = args.Name;
             retval.UserType = extra.UserType;
             retval.IsSubscriber = extra.IsSubscriber;
+            retval.SubscriberLevel = extra.SubscriberLevel;
             retval.IsTurbo = extra.IsTurbo;
             retval.UserId = extra.UserId;
+            retval.IsBits = extra.IsBits;
+            retval.BitsLevel = extra.BitsLevel;
+            retval.BitsSent = extra.BitsSent;
 
             if (!args.Channel.StartsWith("#"))
             {
@@ -67,6 +71,7 @@ namespace Twitch
             {
                 retval.UserType |= TwitchUserTypes.Citillara;
             }
+
 
             return retval;
         }

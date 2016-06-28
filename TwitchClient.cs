@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 using Twitch.Models;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.IO;
 
 namespace Twitch
 {
     public class TwitchClient
     {
-        
+
         private IrcClient m_client;
         private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
         private string m_name;
@@ -35,6 +36,8 @@ namespace Twitch
         /// </summary>
         public bool AutoDetectSendWhispers = false;
 
+        public MessageLevel LogLevel { get { return m_client.LogLevel; } set { m_client.LogLevel = value; } }
+
         public TwitchClient(string nickname, string password)
         {
             m_client = new IrcClient("irc.chat.twitch.tv", 80, nickname);
@@ -52,6 +55,7 @@ namespace Twitch
             m_client.OnQuit += m_client_OnQuit;
             m_client.OnUnknownCommand += m_client_OnUnknownCommand;
             m_client.LogLevel = MessageLevel.Info;
+            
         }
 
         public void Connect()
@@ -163,6 +167,8 @@ namespace Twitch
         void m_client_OnLog(IrcClient sender, IrcClientOnLogEventArgs args)
         {
             Console.WriteLine(r.Replace(args.Message, string.Empty));
+            if (m_client.LogLevel == MessageLevel.Debug)
+                File.AppendAllText("log.txt", args.Message + Environment.NewLine);
         }
 
         void m_client_OnJoin(IrcClient sender, IrcClientOnJoinEventArgs args)

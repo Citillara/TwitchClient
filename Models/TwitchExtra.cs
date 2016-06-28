@@ -13,8 +13,12 @@ namespace Twitch.Models
         public Color UserColor = SystemColors.WindowText;
         public string DisplayName;
         public bool IsSubscriber = false;
+        public long SubscriberLevel = -1;
         public bool IsTurbo = false;
         public long UserId = -1;
+        public bool IsBits { get { return BitsLevel > -1 || BitsSent > -1; } }
+        public long BitsLevel = -1;
+        public long BitsSent = 0;
         public TwitchUserTypes UserType = TwitchUserTypes.None;
 
         
@@ -54,6 +58,36 @@ namespace Twitch.Models
             {
                 UserType = ParseType(tags["user-type"]);
             }
+            if (tags.ContainsKey("bits"))
+            {
+                if (!string.IsNullOrEmpty(tags["bits"]))
+                {
+                    long.TryParse(tags["bits"], out BitsSent);
+                }
+            }
+
+            // Parsing badges
+            if (tags.ContainsKey("badges"))
+            {
+                var split = tags["badges"].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var spl in split)
+                {
+                    var s = spl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    if (s.Length == 2)
+                    {
+                        switch (s[0])
+                        {
+                            case "subscriber":
+                                long.TryParse(s[1], out SubscriberLevel);
+                                break;
+                            case "bits":
+                                long.TryParse(s[1], out BitsLevel);
+                                break;
+                            default: break;
+                        }
+                    }
+                }
+            }
 
         }
 
@@ -67,6 +101,16 @@ namespace Twitch.Models
                 case "staff": return TwitchUserTypes.Staff;
                 default: return TwitchUserTypes.None;
             }
+        }
+
+
+    }
+
+    public static class Extensions
+    {
+        public static string[] Split(this string str, char c, StringSplitOptions op)
+        {
+            return str.Split(new char[] { c }, op);
         }
     }
 }
