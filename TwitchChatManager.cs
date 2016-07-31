@@ -65,7 +65,7 @@ namespace Twitch
             }
             if (botmasters.Contains(args.Name))
             {
-                retval.UserType |= TwitchUserTypes.BotMaster;
+                retval.UserType |= TwitchUserTypes.Developper;
             }
             if (args.Name.Equals("citillara"))
             {

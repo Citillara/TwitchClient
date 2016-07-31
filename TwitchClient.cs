@@ -28,8 +28,12 @@ namespace Twitch
         public delegate void TwitchClientOnMessageEventHandler(TwitchClient sender, TwitchMessage args);
         public event TwitchClientOnMessageEventHandler OnMessage;
 
-        public delegate void TwitchClientPerformEventHandler(TwitchClient sender);
-        public event TwitchClientPerformEventHandler OnPerform;
+        public delegate void TwitchClientOnPerformEventHandler(TwitchClient sender);
+        public event TwitchClientOnPerformEventHandler OnPerform;
+
+
+        public delegate void TwitchClientOnDisconnectEventHandler(TwitchClient sender, bool wasManualDisconnect);
+        public event TwitchClientOnDisconnectEventHandler OnDisconnect;
 
         /// <summary>
         /// If sending to a user as a message, it will automatically be converted to whisper
@@ -54,8 +58,15 @@ namespace Twitch
             m_client.OnPrivateMessage += m_client_OnPrivateMessage;
             m_client.OnQuit += m_client_OnQuit;
             m_client.OnUnknownCommand += m_client_OnUnknownCommand;
+            m_client.OnDisconnect += M_client_OnDisconnect;
             m_client.LogLevel = MessageLevel.Info;
             
+        }
+
+        private void M_client_OnDisconnect(IrcClient sender, bool wasManualDisconnect)
+        {
+            if (OnDisconnect != null)
+                OnDisconnect(this, wasManualDisconnect);
         }
 
         public void Connect()
