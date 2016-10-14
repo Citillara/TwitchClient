@@ -18,6 +18,7 @@ namespace Twitch
         private IrcClient m_client;
         private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
         private string m_name;
+        public string Name { get { return m_name; } }
 
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
         public event TwitchClientOnPartEventHandler OnPart;
