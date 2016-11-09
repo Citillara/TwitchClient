@@ -14,7 +14,7 @@ namespace Twitch
 {
     public class TwitchClient
     {
-
+        public static readonly string Version = "1";
         private IrcClient m_client;
         private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
         private string m_name;
