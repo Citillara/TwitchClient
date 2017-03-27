@@ -21,47 +21,13 @@ namespace Twitch
 
         public TwitchMessage ParseTwitchMessageFromIrc(IrcClientOnPrivateMessageEventArgs args)
         {
-            TwitchMessage retval = new TwitchMessage();
             string key = string.Concat(args.Channel, args.Name);
 
-            TwitchExtra extra = new TwitchExtra(args.Tags);
-
-            retval.Channel = args.Channel;
-            retval.Message = args.Message;
-            retval.SenderName = args.Name;
-            retval.UserType = extra.UserType;
-            retval.IsSubscriber = extra.IsSubscriber;
-            retval.SubscriberLevel = extra.SubscriberLevel;
-            retval.IsTurbo = extra.IsTurbo;
-            retval.UserId = extra.UserId;
-            retval.IsBits = extra.IsBits;
-            retval.BitsLevel = extra.BitsLevel;
-            retval.BitsSent = extra.BitsSent;
-
-            if (!args.Channel.StartsWith("#"))
-            {
-                retval.IsWhisper = true;
-                retval.Channel = args.Name;
-                retval.WhisperChannel = args.Channel;
-            }
-
-
-            if (!string.IsNullOrEmpty(extra.DisplayName))
-                retval.SenderDisplayName = extra.DisplayName;
-            else
-                retval.SenderDisplayName = args.Name;
+            TwitchMessage retval = new TwitchMessage(args);
 
             if(opslist.Contains(key))
             {
                 retval.UserType |= TwitchUserTypes.Mod;
-            }
-            if (extra.IsSubscriber)
-            {
-                retval.UserType |= TwitchUserTypes.Subscriber;
-            }
-            if (args.Name.Equals(args.Channel.Substring(1)))
-            {
-                retval.UserType |= TwitchUserTypes.Broadcaster;
             }
             if (botmasters.Contains(args.Name))
             {

@@ -15,8 +15,9 @@ namespace Twitch.Models
         public bool IsSubscriber = false;
         public long SubscriberLevel = -1;
         public bool IsTurbo = false;
+        public bool IsPrime = false;
         public long UserId = -1;
-        public bool IsBits { get { return BitsLevel > -1 || BitsSent > -1; } }
+        public long RoomId = -1;
         public long BitsLevel = -1;
         public long BitsSent = 0;
         public TwitchUserTypes UserType = TwitchUserTypes.None;
@@ -54,6 +55,10 @@ namespace Twitch.Models
             {
                 UserId = long.Parse(tags["user-id"]);
             }
+            if (tags.ContainsKey("room-id"))
+            {
+                RoomId = long.Parse(tags["room-id"]);
+            }
             if (tags.ContainsKey("user-type"))
             {
                 UserType = ParseType(tags["user-type"]);
@@ -82,6 +87,9 @@ namespace Twitch.Models
                                 break;
                             case "bits":
                                 long.TryParse(s[1], out BitsLevel);
+                                break;
+                            case "premium":
+                                IsPrime = true;
                                 break;
                             default: break;
                         }

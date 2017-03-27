@@ -14,7 +14,8 @@ namespace Twitch
 {
     public class TwitchClient
     {
-        public static readonly string Version = "1";
+        private ManualResetEvent m_keep_alive_token = new ManualResetEvent(false);
+        public static readonly string Version = "2";
         private IrcClient m_client;
         private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
         private string m_name;
@@ -29,9 +30,11 @@ namespace Twitch
         public delegate void TwitchClientOnMessageEventHandler(TwitchClient sender, TwitchMessage args);
         public event TwitchClientOnMessageEventHandler OnMessage;
 
+        public delegate void TwitchClientOnLogEventHandler(TwitchClient sender, IrcClientOnLogEventArgs args);
+        public event TwitchClientOnLogEventHandler OnLog;
+
         public delegate void TwitchClientOnPerformEventHandler(TwitchClient sender);
         public event TwitchClientOnPerformEventHandler OnPerform;
-
 
         public delegate void TwitchClientOnDisconnectEventHandler(TwitchClient sender, bool wasManualDisconnect);
         public event TwitchClientOnDisconnectEventHandler OnDisconnect;
@@ -40,8 +43,16 @@ namespace Twitch
         /// If sending to a user as a message, it will automatically be converted to whisper
         /// </summary>
         public bool AutoDetectSendWhispers = false;
+        public bool KeepAlive = true;
+        public string KeepAliveChannel = "";
 
-        public MessageLevel LogLevel { get { return m_client.LogLevel; } set { m_client.LogLevel = value; } }
+        public Twitch.Models.MessageLevel LogLevel 
+        { 
+            get { return (Twitch.Models.MessageLevel)m_client.LogLevel; } 
+            set { m_client.LogLevel = (Irc.MessageLevel) value; } 
+        }
+        public bool LogToConsole { get { return m_client.LogToConsole; } set { m_client.LogToConsole = value; } }
+        public bool LogEnabled { get { return m_client.LogEnabled; } set { m_client.LogEnabled = value; } }
 
         public TwitchClient(string nickname, string password)
         {
@@ -51,6 +62,7 @@ namespace Twitch
             m_client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
             m_client.OnDebug += m_client_OnDebug;
             m_client.OnJoin += m_client_OnJoin;
+            m_client.OnJoin += m_client_OnJoinKeepAlive;
             m_client.OnLog += m_client_OnLog;
             m_client.OnMode += m_client_OnMode;
             m_client.OnNotice += m_client_OnNotice;
@@ -60,12 +72,29 @@ namespace Twitch
             m_client.OnQuit += m_client_OnQuit;
             m_client.OnUnknownCommand += m_client_OnUnknownCommand;
             m_client.OnDisconnect += M_client_OnDisconnect;
-            m_client.LogLevel = MessageLevel.Info;
+            m_client.LogLevel = Irc.MessageLevel.Info;
             
+        }
+
+        void m_client_OnJoinKeepAlive(IrcClient sender, IrcClientOnJoinEventArgs args)
+        {
+            Console.WriteLine("Checking keep alive");
+            string channel = "#" + m_name.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(KeepAliveChannel))
+                channel = KeepAliveChannel;
+
+            if (args.IsMyself && args.Channel == channel)
+            {
+                Console.WriteLine("Starting keep alive");
+                m_client.OnJoin -= m_client_OnJoinKeepAlive;
+                new Thread(new ThreadStart(KeepAliveLoop)).Start();
+            }
         }
 
         private void M_client_OnDisconnect(IrcClient sender, bool wasManualDisconnect)
         {
+            KeepAlive = false;
+            m_keep_alive_token.Set();
             if (OnDisconnect != null)
                 OnDisconnect(this, wasManualDisconnect);
         }
@@ -123,6 +152,21 @@ namespace Twitch
                 m_client.Part(channel);
         }
 
+        private void KeepAliveLoop()
+        {
+            Console.WriteLine("Started keep alive");
+            Random r = new Random();
+            string channel = "#" + m_name.ToLowerInvariant();
+            if (!string.IsNullOrEmpty(KeepAliveChannel))
+                channel = KeepAliveChannel;
+
+            while (KeepAlive)
+            {
+                SendMessage(channel, "Keep alive : " + DateTime.UtcNow.Ticks);
+                int wait = r.Next(3 * 60 * 1000, 4 * 60 * 1000 + 30 * 1000); // 3mins - 4mins30s
+                m_keep_alive_token.WaitOne(wait);
+            }
+        }
 
         void m_client_OnUnknownCommand(IrcClient sender, IrcMessage message)
         {
@@ -175,18 +219,16 @@ namespace Twitch
             m_twitch_chat_manager.OnModeChange(args);
         }
 
-        Regex r = new Regex(@"[^\u0000-\u007F]", RegexOptions.Compiled);
         void m_client_OnLog(IrcClient sender, IrcClientOnLogEventArgs args)
         {
-            Console.WriteLine(r.Replace(args.Message, string.Empty));
-            if (m_client.LogLevel == MessageLevel.Debug)
-                File.AppendAllText("log.txt", args.Message + Environment.NewLine);
+            if (OnLog != null)
+                OnLog(this, args);
         }
 
         void m_client_OnJoin(IrcClient sender, IrcClientOnJoinEventArgs args)
         {
             if(OnJoin != null)
-                OnJoin(this, new TwitchClientOnJoinEventArgs(args.Name, args.Channel, args.Name.Equals(m_name)));
+                OnJoin(this, new TwitchClientOnJoinEventArgs(args.Name, args.Channel, args.Name.ToLowerInvariant().Equals(m_name.ToLowerInvariant())));
         }
 
         void m_client_OnDebug(int debug)
@@ -196,11 +238,11 @@ namespace Twitch
 
         void m_client_OnChannelNickListRecived(IrcClient sender, IrcClientOnChannelNickListReceivedEventArgs args)
         {
-            if (OnJoin != null)
-            {
-                foreach(string user in args.NameList)
-                    OnJoin(this, new TwitchClientOnJoinEventArgs(user, args.Channel, user.Equals(m_name)));
-            }
+            //if (OnJoin != null)
+            //{
+            //    foreach(string user in args.NameList)
+            //        OnJoin(this, new TwitchClientOnJoinEventArgs(user, args.Channel, user.ToLowerInvariant().Equals(m_name.ToLowerInvariant())));
+            //}
         }
 
 

@@ -32,4 +32,27 @@ namespace Twitch.Models
         }
     }
 
+    public class TwitchClientOnLogEventArgs : EventArgs
+    {
+        private string m_message;
+        public string Message { get { return m_message; } }
+        private MessageLevel m_level;
+        public MessageLevel Level { get { return m_level; } }
+
+        public TwitchClientOnLogEventArgs(string message, MessageLevel level)
+        {
+            m_message = message;
+            m_level = level;
+        }
+    }
+
+    public enum MessageLevel
+    {
+        Debug = 0,
+        Info = 1,
+        Warning = 2,
+        Error = 3,
+        Critical = 4
+    }
+
 }
