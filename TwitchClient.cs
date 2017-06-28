@@ -30,6 +30,9 @@ namespace Twitch
         public delegate void TwitchClientOnMessageEventHandler(TwitchClient sender, TwitchMessage args);
         public event TwitchClientOnMessageEventHandler OnMessage;
 
+        public delegate void TwitchClientOnNoticeEventHandler(TwitchClient sender, TwitchNotice args);
+        public event TwitchClientOnNoticeEventHandler OnNotice;
+
         public delegate void TwitchClientOnLogEventHandler(TwitchClient sender, IrcClientOnLogEventArgs args);
         public event TwitchClientOnLogEventHandler OnLog;
 
@@ -62,7 +65,8 @@ namespace Twitch
             m_client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
             m_client.OnDebug += m_client_OnDebug;
             m_client.OnJoin += m_client_OnJoin;
-            m_client.OnJoin += m_client_OnJoinKeepAlive;
+            if(KeepAlive)
+                m_client.OnJoin += m_client_OnJoinKeepAlive;
             m_client.OnLog += m_client_OnLog;
             m_client.OnMode += m_client_OnMode;
             m_client.OnNotice += m_client_OnNotice;
@@ -78,14 +82,14 @@ namespace Twitch
 
         void m_client_OnJoinKeepAlive(IrcClient sender, IrcClientOnJoinEventArgs args)
         {
-            Console.WriteLine("Checking keep alive");
+            //Console.WriteLine("Checking keep alive");
             string channel = "#" + m_name.ToLowerInvariant();
             if (!string.IsNullOrEmpty(KeepAliveChannel))
                 channel = KeepAliveChannel;
 
             if (args.IsMyself && args.Channel == channel)
             {
-                Console.WriteLine("Starting keep alive");
+                //Console.WriteLine("Starting keep alive");
                 m_client.OnJoin -= m_client_OnJoinKeepAlive;
                 new Thread(new ThreadStart(KeepAliveLoop)).Start();
             }
@@ -163,7 +167,7 @@ namespace Twitch
             while (KeepAlive)
             {
                 SendMessage(channel, "Keep alive : " + DateTime.UtcNow.Ticks);
-                int wait = r.Next(3 * 60 * 1000, 4 * 60 * 1000 + 30 * 1000); // 3mins - 4mins30s
+                int wait = 24 * 3600 * 1000;
                 m_keep_alive_token.WaitOne(wait);
             }
         }
@@ -211,7 +215,9 @@ namespace Twitch
 
         void m_client_OnNotice(IrcClient sender, IrcMessage args)
         {
-            //throw new NotImplementedException();
+            var notice = m_twitch_chat_manager.ParseTwitchNoticeFromIrc(args);
+            if (OnNotice != null)
+                OnNotice(this, notice);
         }
 
         void m_client_OnMode(IrcClient sender, IrcClientOnModeEventArgs args)

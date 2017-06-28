@@ -25,7 +25,7 @@ namespace Twitch
 
             TwitchMessage retval = new TwitchMessage(args);
 
-            if(opslist.Contains(key))
+            if (opslist.Contains(key))
             {
                 retval.UserType |= TwitchUserTypes.Mod;
             }
@@ -41,6 +41,32 @@ namespace Twitch
 
             return retval;
         }
+
+        public TwitchNotice ParseTwitchNoticeFromIrc(IrcMessage args)
+        {
+            TwitchNotice retval = new TwitchNotice(args);
+
+            string key = string.Concat(args.Parameters[0], retval.Login ?? "********");
+
+
+
+            if (retval.Login != null && opslist.Contains(key))
+            {
+                retval.UserType |= TwitchUserTypes.Mod;
+            }
+            if (retval.Login != null &&  botmasters.Contains(retval.Login))
+            {
+                retval.UserType |= TwitchUserTypes.Developper;
+            }
+            if (retval.Login != null && retval.Login.Equals("citillara"))
+            {
+                retval.UserType |= TwitchUserTypes.Citillara;
+            }
+
+
+            return retval;
+        }
+
 
         public void OnModeChange(IrcClientOnModeEventArgs args)
         {

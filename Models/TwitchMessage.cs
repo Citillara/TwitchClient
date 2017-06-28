@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Twitch.Models
 {
-    public class TwitchMessage
+    public class TwitchMessage : TwitchExtra
     {
         static readonly Regex r = new Regex(@"[^\u0000-\u007F]", RegexOptions.Compiled);
 
@@ -18,16 +18,6 @@ namespace Twitch.Models
         public string Message;
         public string SenderName;
         public string SenderDisplayName;
-        public bool IsSubscriber = false;
-        public long SubscriberLevel = -1;
-        public bool IsTurbo = false;
-        public bool IsPrime = false;
-        public long UserId = -1;
-        public long BitsSent = 0;
-        public long BitsLevel = -1;
-
-        public TwitchUserTypes UserType = TwitchUserTypes.None;
-
 
         private string m_command;
         public string Command
@@ -62,21 +52,13 @@ namespace Twitch.Models
             }
         }
 
-        public TwitchMessage(IrcClientOnPrivateMessageEventArgs args)
+        public TwitchMessage(IrcClientOnPrivateMessageEventArgs args) :
+            base(args.Tags, args.Name.Equals(args.Channel.Substring(1)))
         {
-            TwitchExtra extra = new TwitchExtra(args.Tags);
 
             Channel = args.Channel;
             Message = args.Message;
             SenderName = args.Name;
-            UserType = extra.UserType;
-            IsSubscriber = extra.IsSubscriber;
-            SubscriberLevel = extra.SubscriberLevel;
-            IsTurbo = extra.IsTurbo;
-            IsPrime = extra.IsPrime;
-            UserId = extra.UserId;
-            BitsLevel = extra.BitsLevel;
-            BitsSent = extra.BitsSent;
 
             if (!args.Channel.StartsWith("#"))
             {
@@ -85,20 +67,11 @@ namespace Twitch.Models
                 WhisperChannel = args.Channel;
             }
 
-            if (!string.IsNullOrEmpty(extra.DisplayName))
-                SenderDisplayName = extra.DisplayName;
+            if (!string.IsNullOrEmpty(DisplayName))
+                SenderDisplayName = DisplayName;
             else
                 SenderDisplayName = args.Name;
 
-
-            if (extra.IsSubscriber)
-            {
-                UserType |= TwitchUserTypes.Subscriber;
-            }
-            if (args.Name.Equals(args.Channel.Substring(1)))
-            {
-                UserType |= TwitchUserTypes.Broadcaster;
-            }
 
         }
 
