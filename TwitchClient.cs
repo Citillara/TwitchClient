@@ -19,6 +19,7 @@ namespace Twitch
         private IrcClient m_client;
         private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
         private string m_name;
+        private bool hasBeenDisconnected = false;
         public string Name { get { return m_name; } }
 
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
@@ -75,7 +76,7 @@ namespace Twitch
             m_client.OnPrivateMessage += m_client_OnPrivateMessage;
             m_client.OnQuit += m_client_OnQuit;
             m_client.OnUnknownCommand += m_client_OnUnknownCommand;
-            m_client.OnDisconnect += M_client_OnDisconnect;
+            m_client.OnDisconnect += m_client_OnDisconnect;
             m_client.LogLevel = Irc.MessageLevel.Info;
             
         }
@@ -95,7 +96,7 @@ namespace Twitch
             }
         }
 
-        private void M_client_OnDisconnect(IrcClient sender, bool wasManualDisconnect)
+        private void m_client_OnDisconnect(IrcClient sender, bool wasManualDisconnect)
         {
             KeepAlive = false;
             m_keep_alive_token.Set();
@@ -105,6 +106,8 @@ namespace Twitch
 
         public void Connect()
         {
+            if (hasBeenDisconnected)
+                throw new Exception("Cannot reconnect after a disconnection. Create a new instance of the class");
             m_client.Connect();
         }
 
@@ -144,6 +147,20 @@ namespace Twitch
             this.SendMessage(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
         }
 
+        /// <summary>
+        /// Disconnects the client and close all connection. Cannot be reused afterwards
+        /// </summary>
+        public void Disconnect()
+        {
+            hasBeenDisconnected = true;
+            if (m_client != null && m_client.IsConnected)
+                m_client.Disconnect();
+
+            KeepAlive = false;
+            m_keep_alive_token.Set();
+            if (OnDisconnect != null)
+                OnDisconnect(this, true);
+        }
 
         public void Join(string channel)
         {
@@ -250,7 +267,6 @@ namespace Twitch
             //        OnJoin(this, new TwitchClientOnJoinEventArgs(user, args.Channel, user.ToLowerInvariant().Equals(m_name.ToLowerInvariant())));
             //}
         }
-
 
     }
 }
