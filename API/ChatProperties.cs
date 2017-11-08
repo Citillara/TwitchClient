@@ -16,21 +16,21 @@ namespace Twitch.API
     {
 
         [DataMember(Name = "_id")]
-        public long Id;
+        public long Id { get; set; }
         [DataMember(Name = "hide_chat_links")]
-        public bool HideChatLinks;
+        public bool HideChatLinks { get; set; }
         [DataMember(Name = "devchat")]
-        public bool DevChat;
+        public bool DevChat { get; set; }
         [DataMember(Name = "game")]
-        public string Game;
+        public string Game { get; set; }
         [DataMember(Name = "require_verified_account")]
-        public bool RequireVerifiedAccount;
+        public bool RequireVerifiedAccount { get; set; }
         [DataMember(Name = "subsonly")]
-        public bool SubsOnly;
+        public bool SubsOnly { get; set; }
         [DataMember(Name = "eventchat")]
-        public bool EventChat;
+        public bool EventChat { get; set; }
         [DataMember(Name = "cluster")]
-        public string Cluster;
+        public string Cluster { get; set; }
 
         static T GetData<T>(string url)
         {

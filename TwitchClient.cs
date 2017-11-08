@@ -64,7 +64,6 @@ namespace Twitch
             m_name = nickname;
             m_client.Password = password;
             m_client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
-            m_client.OnDebug += m_client_OnDebug;
             m_client.OnJoin += m_client_OnJoin;
             if(KeepAlive)
                 m_client.OnJoin += m_client_OnJoinKeepAlive;
@@ -107,7 +106,7 @@ namespace Twitch
         public void Connect()
         {
             if (hasBeenDisconnected)
-                throw new Exception("Cannot reconnect after a disconnection. Create a new instance of the class");
+                throw new ObjectDisposedException("Cannot reconnect after a disconnection. Create a new instance of the class");
             m_client.Connect();
         }
 
