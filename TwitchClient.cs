@@ -14,13 +14,13 @@ namespace Twitch
 {
     public class TwitchClient
     {
-        private ManualResetEvent m_keep_alive_token = new ManualResetEvent(false);
+        private ManualResetEvent m_KeepAliveToken = new ManualResetEvent(false);
         public static readonly string Version = "2";
-        private IrcClient m_client;
-        private TwitchChatManager m_twitch_chat_manager = new TwitchChatManager();
-        private string m_name;
+        private IrcClient m_Client;
+        private TwitchChatManager m_TwitchChatManager = new TwitchChatManager();
+        private string m_Name;
         private bool hasBeenDisconnected = false;
-        public string Name { get { return m_name; } }
+        public string Name { get { return m_Name; } }
 
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
         public event TwitchClientOnPartEventHandler OnPart;
@@ -52,45 +52,45 @@ namespace Twitch
 
         public Twitch.Models.MessageLevel LogLevel 
         { 
-            get { return (Twitch.Models.MessageLevel)m_client.LogLevel; } 
-            set { m_client.LogLevel = (Irc.MessageLevel) value; } 
+            get { return (Twitch.Models.MessageLevel)m_Client.LogLevel; } 
+            set { m_Client.LogLevel = (Irc.MessageLevel) value; } 
         }
-        public bool LogToConsole { get { return m_client.LogToConsole; } set { m_client.LogToConsole = value; } }
-        public bool LogEnabled { get { return m_client.LogEnabled; } set { m_client.LogEnabled = value; } }
+        public bool LogToConsole { get { return m_Client.LogToConsole; } set { m_Client.LogToConsole = value; } }
+        public bool LogEnabled { get { return m_Client.LogEnabled; } set { m_Client.LogEnabled = value; } }
 
         public TwitchClient(string nickname, string password)
         {
-            m_client = new IrcClient("irc.chat.twitch.tv", 80, nickname);
-            m_name = nickname;
-            m_client.Password = password;
-            m_client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
-            m_client.OnJoin += m_client_OnJoin;
+            m_Client = new IrcClient("irc.chat.twitch.tv", 80, nickname);
+            m_Name = nickname;
+            m_Client.Password = password;
+            m_Client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
+            m_Client.OnJoin += m_client_OnJoin;
             if(KeepAlive)
-                m_client.OnJoin += m_client_OnJoinKeepAlive;
-            m_client.OnLog += m_client_OnLog;
-            m_client.OnMode += m_client_OnMode;
-            m_client.OnNotice += m_client_OnNotice;
-            m_client.OnPart += m_client_OnPart;
-            m_client.OnPerform += m_client_OnPerform;
-            m_client.OnPrivateMessage += m_client_OnPrivateMessage;
-            m_client.OnQuit += m_client_OnQuit;
-            m_client.OnUnknownCommand += m_client_OnUnknownCommand;
-            m_client.OnDisconnect += m_client_OnDisconnect;
-            m_client.LogLevel = Irc.MessageLevel.Info;
+                m_Client.OnJoin += m_client_OnJoinKeepAlive;
+            m_Client.OnLog += m_client_OnLog;
+            m_Client.OnMode += m_client_OnMode;
+            m_Client.OnNotice += m_client_OnNotice;
+            m_Client.OnPart += m_client_OnPart;
+            m_Client.OnPerform += m_client_OnPerform;
+            m_Client.OnPrivateMessage += m_client_OnPrivateMessage;
+            m_Client.OnQuit += m_client_OnQuit;
+            m_Client.OnUnknownCommand += m_client_OnUnknownCommand;
+            m_Client.OnDisconnect += m_client_OnDisconnect;
+            m_Client.LogLevel = Irc.MessageLevel.Info;
             
         }
 
         void m_client_OnJoinKeepAlive(IrcClient sender, IrcClientOnJoinEventArgs args)
         {
             //Console.WriteLine("Checking keep alive");
-            string channel = "#" + m_name.ToLowerInvariant();
+            string channel = "#" + m_Name.ToLowerInvariant();
             if (!string.IsNullOrEmpty(KeepAliveChannel))
                 channel = KeepAliveChannel;
 
             if (args.IsMyself && args.Channel == channel)
             {
                 //Console.WriteLine("Starting keep alive");
-                m_client.OnJoin -= m_client_OnJoinKeepAlive;
+                m_Client.OnJoin -= m_client_OnJoinKeepAlive;
                 new Thread(new ThreadStart(KeepAliveLoop)).Start();
             }
         }
@@ -98,7 +98,7 @@ namespace Twitch
         private void m_client_OnDisconnect(IrcClient sender, bool wasManualDisconnect)
         {
             KeepAlive = false;
-            m_keep_alive_token.Set();
+            m_KeepAliveToken.Set();
             if (OnDisconnect != null)
                 OnDisconnect(this, wasManualDisconnect);
         }
@@ -107,13 +107,13 @@ namespace Twitch
         {
             if (hasBeenDisconnected)
                 throw new ObjectDisposedException("Cannot reconnect after a disconnection. Create a new instance of the class");
-            m_client.Connect();
+            m_Client.Connect();
         }
 
         public void SendWhisper(string channel, string message)
         {
-            if (m_client.IsConnected)
-                m_client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
+            if (m_Client.IsConnected)
+                m_Client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
         }
         public void SendWhisper(string destination, string format, params object[] arg)
         {
@@ -122,8 +122,8 @@ namespace Twitch
 
         public void SendAction(string channel, string action)
         {
-            if(m_client.IsConnected)
-                m_client.PrivMsg(channel, "\x0001ACTION {0}\x01", action);
+            if(m_Client.IsConnected)
+                m_Client.PrivMsg(channel, "\x0001ACTION {0}\x01", action);
 
 
             //m_client.PrivMsg(channel, "\x01 ACTION {0}\x01", action);
@@ -135,11 +135,11 @@ namespace Twitch
 
         public void SendMessage(string channel, string message)
         {
-            if (m_client.IsConnected)
+            if (m_Client.IsConnected)
                 if (AutoDetectSendWhispers && !channel.StartsWith("#"))
                     SendWhisper(channel, message);
                 else 
-                    m_client.PrivMsg(channel, message);
+                    m_Client.PrivMsg(channel, message);
         }
         public void SendMessage(string destination, string format, params object[] arg)
         {
@@ -152,40 +152,75 @@ namespace Twitch
         public void Disconnect()
         {
             hasBeenDisconnected = true;
-            if (m_client != null && m_client.IsConnected)
-                m_client.Disconnect();
+            if (m_Client != null && m_Client.IsConnected)
+                m_Client.Disconnect();
 
             KeepAlive = false;
-            m_keep_alive_token.Set();
+            m_KeepAliveToken.Set();
             if (OnDisconnect != null)
                 OnDisconnect(this, true);
         }
 
         public void Join(string channel)
         {
-            if (m_client.IsConnected)
-                m_client.Join(channel);
+            if (m_Client.IsConnected)
+                m_Client.Join(channel);
         }
         public void Part(string channel)
         {
-            if (m_client.IsConnected)
-                m_client.Part(channel);
+            if (m_Client.IsConnected)
+                m_Client.Part(channel);
         }
 
         private void KeepAliveLoop()
         {
-            Console.WriteLine("Started keep alive");
+            Console.WriteLine("[{0}] Started keep alive", DateTime.Now.ToString());
             Random r = new Random();
-            string channel = "#" + m_name.ToLowerInvariant();
+            string channel = "#" + m_Name.ToLowerInvariant();
             if (!string.IsNullOrEmpty(KeepAliveChannel))
                 channel = KeepAliveChannel;
 
             while (KeepAlive)
             {
-                SendMessage(channel, "Keep alive : " + DateTime.UtcNow.Ticks);
-                int wait = 24 * 3600 * 1000;
-                m_keep_alive_token.WaitOne(wait);
+                SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
+                int wait = m_KeepAliveInterval * 1000;
+                m_KeepAliveToken.Reset();
+                m_KeepAliveToken.WaitOne(wait);
             }
+        }
+
+        private DateTime m_LastKeepAlive = DateTime.Now;
+        private int m_KeepAliveInterval = 2 * 3600;
+
+        public DateTime LastKeepAlive
+        {
+            get { return m_LastKeepAlive; }
+        }
+
+        public int KeepAliveInterval
+        {
+            get
+            {
+                return m_KeepAliveInterval;
+            }
+            set
+            {
+                m_KeepAliveInterval = value;
+                TriggerNextKeepAlive();
+            }
+        }
+
+        public DateTime NextKeepAlive
+        {
+            get
+            {
+                return m_LastKeepAlive.AddSeconds(m_KeepAliveInterval);
+            }
+        }
+
+        public void TriggerNextKeepAlive()
+        {
+            m_KeepAliveToken.Set();
         }
 
         void m_client_OnUnknownCommand(IrcClient sender, IrcMessage message)
@@ -208,7 +243,7 @@ namespace Twitch
 
         void m_client_OnPrivateMessage(IrcClient sender, IrcClientOnPrivateMessageEventArgs args)
         {
-            var message = m_twitch_chat_manager.ParseTwitchMessageFromIrc(args);
+            var message = m_TwitchChatManager.ParseTwitchMessageFromIrc(args);
             if(OnMessage != null)
                 OnMessage(this, message);
         }
@@ -226,19 +261,19 @@ namespace Twitch
         void m_client_OnPart(IrcClient sender, IrcClientOnPartEventArgs args)
         {
             if(OnPart != null)
-                OnPart(this, new TwitchClientOnPartEventArgs(args.Name, args.Channel, m_name.Equals(args.Name)));
+                OnPart(this, new TwitchClientOnPartEventArgs(args.Name, args.Channel, m_Name.Equals(args.Name)));
         }
 
         void m_client_OnNotice(IrcClient sender, IrcMessage args)
         {
-            var notice = m_twitch_chat_manager.ParseTwitchNoticeFromIrc(args);
+            var notice = m_TwitchChatManager.ParseTwitchNoticeFromIrc(args);
             if (OnNotice != null)
                 OnNotice(this, notice);
         }
 
         void m_client_OnMode(IrcClient sender, IrcClientOnModeEventArgs args)
         {
-            m_twitch_chat_manager.OnModeChange(args);
+            m_TwitchChatManager.OnModeChange(args);
         }
 
         void m_client_OnLog(IrcClient sender, IrcClientOnLogEventArgs args)
@@ -250,7 +285,7 @@ namespace Twitch
         void m_client_OnJoin(IrcClient sender, IrcClientOnJoinEventArgs args)
         {
             if(OnJoin != null)
-                OnJoin(this, new TwitchClientOnJoinEventArgs(args.Name, args.Channel, args.Name.ToLowerInvariant().Equals(m_name.ToLowerInvariant())));
+                OnJoin(this, new TwitchClientOnJoinEventArgs(args.Name, args.Channel, args.Name.ToLowerInvariant().Equals(m_Name.ToLowerInvariant())));
         }
 
         void m_client_OnDebug(int debug)
