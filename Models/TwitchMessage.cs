@@ -96,6 +96,8 @@ namespace Twitch.Models
                 sb.AppendFormat("[Mod] ");
             if (UserType.HasFlag(TwitchUserTypes.Subscriber))
                 sb.AppendFormat("[Sub {0}] ", SubscriberLevel);
+            if (IsVIP)
+                sb.AppendFormat("[VIP] ");
             if (IsTurbo)
                 sb.AppendFormat("[Turbo] ");
             if (IsPrime)

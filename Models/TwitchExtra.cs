@@ -14,6 +14,7 @@ namespace Twitch.Models
         public string DisplayName;
         public string Login;
         public bool IsSubscriber = false;
+        public bool IsVIP = false;
         public long SubscriberLevel = -1;
         public bool IsTurbo = false;
         public bool IsPrime = false;
@@ -172,6 +173,9 @@ namespace Twitch.Models
                                 break;
                             case "premium":
                                 IsPrime = true;
+                                break;
+                            case "vip":
+                                IsVIP = true;
                                 break;
                             case "partner":
                                 long.TryParse(s[1], out PartnerLevel);
