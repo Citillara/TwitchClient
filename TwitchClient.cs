@@ -22,6 +22,8 @@ namespace Twitch
         private bool hasBeenDisconnected = false;
         public string Name { get { return m_Name; } }
 
+        
+
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
         public event TwitchClientOnPartEventHandler OnPart;
 
@@ -184,6 +186,7 @@ namespace Twitch
             {
                 SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
                 int wait = m_KeepAliveInterval * 1000;
+                m_LastKeepAlive = DateTime.Now;
                 m_KeepAliveToken.Reset();
                 m_KeepAliveToken.WaitOne(wait);
             }
@@ -302,5 +305,10 @@ namespace Twitch
             //}
         }
 
+
+        public enum RateLimitMode
+        {
+            None, 
+        }
     }
 }
