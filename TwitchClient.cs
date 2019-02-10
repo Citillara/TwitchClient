@@ -79,7 +79,7 @@ namespace Twitch
             m_Client.OnUnknownCommand += m_client_OnUnknownCommand;
             m_Client.OnDisconnect += m_client_OnDisconnect;
             m_Client.LogLevel = Irc.MessageLevel.Info;
-            
+            m_Client.ServerEncoding = Encoding.UTF8;
         }
 
         void m_client_OnJoinKeepAlive(IrcClient sender, IrcClientOnJoinEventArgs args)
