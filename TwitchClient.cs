@@ -9,6 +9,7 @@ using Twitch.Models;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.IO;
+using System.Diagnostics;
 
 namespace Twitch
 {
@@ -21,7 +22,6 @@ namespace Twitch
         private string m_Name;
         private bool hasBeenDisconnected = false;
         public string Name { get { return m_Name; } }
-
         
 
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
@@ -185,6 +185,10 @@ namespace Twitch
             while (KeepAlive)
             {
                 SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
+#if DEBUG
+                File.AppendAllText("CitibotKeepAlive_" + Environment.MachineName + "-" + Process.GetCurrentProcess().Id.ToString() + ".log",
+                     "Keep alive : " + DateTime.UtcNow.ToString() + "\r\n");
+#endif
                 int wait = m_KeepAliveInterval * 1000;
                 m_LastKeepAlive = DateTime.Now;
                 m_KeepAliveToken.Reset();
@@ -193,7 +197,7 @@ namespace Twitch
         }
 
         private DateTime m_LastKeepAlive = DateTime.Now;
-        private int m_KeepAliveInterval = 2 * 3600;
+        private int m_KeepAliveInterval = 1 * 3600;
 
         public DateTime LastKeepAlive
         {
@@ -305,6 +309,10 @@ namespace Twitch
             //}
         }
 
+        public string GetIPConnected()
+        {
+            return m_Client.GetIPConnected();
+        }
 
         public enum RateLimitMode
         {

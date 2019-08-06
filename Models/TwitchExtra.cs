@@ -15,7 +15,8 @@ namespace Twitch.Models
         public string Login;
         public bool IsSubscriber = false;
         public bool IsVIP = false;
-        public long SubscriberLevel = -1;
+        public long SubscriberIconLevel = -1;
+        public long SuscriberNumberOfMonths = -1;
         public bool IsTurbo = false;
         public bool IsPrime = false;
         public long UserId = -1;
@@ -58,6 +59,7 @@ namespace Twitch.Models
             ParseTwitchSubs(tags);
             ParseMisc(tags);
             ParseBagdes(tags);
+            ParseBagdesInfo(tags);
         }
 
         private void ParseMainInfo(Dictionary<string, string> tags)
@@ -166,7 +168,7 @@ namespace Twitch.Models
                         switch (s[0])
                         {
                             case "subscriber":
-                                long.TryParse(s[1], out SubscriberLevel);
+                                long.TryParse(s[1], out SubscriberIconLevel);
                                 break;
                             case "bits":
                                 long.TryParse(s[1], out BitsLevel);
@@ -181,6 +183,31 @@ namespace Twitch.Models
                                 long.TryParse(s[1], out PartnerLevel);
                                 if (PartnerLevel > 1)
                                     IsVerified = true;
+                                break;
+                            default: break;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private void ParseBagdesInfo(Dictionary<string, string> tags)
+        {
+
+            // Parsing badges
+            if (tags.ContainsKey("badge-info"))
+            {
+                var split = tags["badge-info"].Split(',', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var spl in split)
+                {
+                    var s = spl.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    if (s.Length == 2)
+                    {
+                        switch (s[0])
+                        {
+                            case "subscriber":
+                                long.TryParse(s[1], out SuscriberNumberOfMonths);
                                 break;
                             default: break;
                         }

@@ -95,7 +95,11 @@ namespace Twitch.Models
             if (UserType.HasFlag(TwitchUserTypes.Mod))
                 sb.AppendFormat("[Mod] ");
             if (UserType.HasFlag(TwitchUserTypes.Subscriber))
-                sb.AppendFormat("[Sub {0}] ", SubscriberLevel);
+                sb.AppendFormat("[Sub {0}/{1}] ", SuscriberNumberOfMonths, SubscriberIconLevel);
+            if (IsVerified)
+                sb.AppendFormat("[Verified] ");
+            if(PartnerLevel != -1)
+                sb.AppendFormat("[Partner {0}] ", PartnerLevel);
             if (IsVIP)
                 sb.AppendFormat("[VIP] ");
             if (IsTurbo)
