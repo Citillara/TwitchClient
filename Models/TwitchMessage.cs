@@ -82,7 +82,7 @@ namespace Twitch.Models
 
             if (UserType.HasFlag(TwitchUserTypes.Citillara))
                 sb.AppendFormat("[C] ");
-            if (UserType.HasFlag(TwitchUserTypes.Developper))
+            if (UserType.HasFlag(TwitchUserTypes.Developer))
                 sb.AppendFormat("[Developper] ");
             if (UserType.HasFlag(TwitchUserTypes.Admin))
                 sb.AppendFormat("[Admin] ");

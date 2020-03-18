@@ -16,7 +16,7 @@ namespace Twitch.Models
         GlobalMod = 1 << 3,
         Broadcaster = 1 << 4,
         Admin = 1 << 5,
-        Developper = 1 << 6,
+        Developer = 1 << 6,
         Citillara = 1 << 7,
     }
 }

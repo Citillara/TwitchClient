@@ -185,10 +185,10 @@ namespace Twitch
             while (KeepAlive)
             {
                 SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
-#if DEBUG
+/*#if DEBUG
                 File.AppendAllText("CitibotKeepAlive_" + Environment.MachineName + "-" + Process.GetCurrentProcess().Id.ToString() + ".log",
                      "Keep alive : " + DateTime.UtcNow.ToString() + "\r\n");
-#endif
+#endif*/
                 int wait = m_KeepAliveInterval * 1000;
                 m_LastKeepAlive = DateTime.Now;
                 m_KeepAliveToken.Reset();

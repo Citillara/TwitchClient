@@ -31,7 +31,7 @@ namespace Twitch
             }
             if (botmasters.Contains(args.Name))
             {
-                retval.UserType |= TwitchUserTypes.Developper;
+                retval.UserType |= TwitchUserTypes.Developer;
             }
             if (args.Name.Equals("citillara"))
             {
@@ -56,7 +56,7 @@ namespace Twitch
             }
             if (retval.Login != null &&  botmasters.Contains(retval.Login))
             {
-                retval.UserType |= TwitchUserTypes.Developper;
+                retval.UserType |= TwitchUserTypes.Developer;
             }
             if (retval.Login != null && retval.Login.Equals("citillara"))
             {
