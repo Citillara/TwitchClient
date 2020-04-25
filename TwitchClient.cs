@@ -114,7 +114,7 @@ namespace Twitch
 
         public void SendWhisper(string channel, string message)
         {
-            if (m_Client.IsConnected)
+            if (m_Client.Status == IrcClient.State.Connected)
                 m_Client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
         }
         public void SendWhisper(string destination, string format, params object[] arg)
@@ -124,7 +124,7 @@ namespace Twitch
 
         public void SendAction(string channel, string action)
         {
-            if(m_Client.IsConnected)
+            if(m_Client.Status == IrcClient.State.Connected)
                 m_Client.PrivMsg(channel, "\x0001ACTION {0}\x01", action);
 
 
@@ -137,7 +137,7 @@ namespace Twitch
 
         public void SendMessage(string channel, string message)
         {
-            if (m_Client.IsConnected)
+            if (m_Client.Status == IrcClient.State.Connected)
                 if (AutoDetectSendWhispers && !channel.StartsWith("#"))
                     SendWhisper(channel, message);
                 else 
@@ -154,7 +154,7 @@ namespace Twitch
         public void Disconnect()
         {
             hasBeenDisconnected = true;
-            if (m_Client != null && m_Client.IsConnected)
+            if (m_Client != null && m_Client.Status == IrcClient.State.Connected)
                 m_Client.Disconnect();
 
             KeepAlive = false;
@@ -165,12 +165,12 @@ namespace Twitch
 
         public void Join(string channel)
         {
-            if (m_Client.IsConnected)
+            if (m_Client.Status == IrcClient.State.Connected)
                 m_Client.Join(channel);
         }
         public void Part(string channel)
         {
-            if (m_Client.IsConnected)
+            if (m_Client.Status == IrcClient.State.Connected)
                 m_Client.Part(channel);
         }
 
