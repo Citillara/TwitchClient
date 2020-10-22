@@ -27,15 +27,33 @@ namespace Twitch.Models
         public long PartnerLevel = -1;
         public TwitchUserTypes UserType = TwitchUserTypes.None;
         public string SystemMessage;
+        public bool IsHighlighted = false;
+        public bool IsReply = false;
 
-        /// <summary>
-        /// Indicates if message is a subscription event
-        /// </summary>
-        public bool IsSub = false;
-        public bool IsResub = false;
-        public long SubMonths = -1;
-        public string SubPlanName;
-        public long SubPlan = -1;
+        public SubMessageDataContainer SubMessageData = new SubMessageDataContainer();
+        public class SubMessageDataContainer
+        {
+            public bool IsSub = false;
+            public bool IsResub = false;
+            public long SubMonths = -1;
+            public string SubPlanName;
+            public long SubPlan = -1;
+            public long SubCumulativeMonths = -1;
+            public long SubMultiMonthsDuration = -1;
+            public long SubMultiMonthsTenure = -1;
+            public bool SubShouldShareStreak = false;
+            public bool SubWasGifted = false;
+        }
+
+        public ReplyMessageDataContainer ReplyMessageData = new ReplyMessageDataContainer();
+        public class ReplyMessageDataContainer
+        {
+            public string ParentDisplayName;
+            public string ParentMessageBody;
+            public string ParentMessageId;
+            public long ParentUserId;
+            public string ParentUserLogin;
+        }
 
         public TwitchExtra(Dictionary<string, string> tags, bool isBroadcaster)
         {
@@ -84,34 +102,86 @@ namespace Twitch.Models
             {
                 UserType = ParseType(tags["user-type"]);
             }
-        }
-        private void ParseTwitchSubs(Dictionary<string, string> tags)
-        {
+
+
             if (tags.ContainsKey("msg"))
             {
-                if (tags["msg"] == "sub")
+                switch (tags["msg"])
                 {
-                    IsSub = true;
+                    case "sub":
+                        SubMessageData.IsSub = true;
+                        break;
+                    case "resub":
+                        SubMessageData.IsResub = true;
+                        break;
+                    case "highlighted-message":
+                        IsHighlighted = true;
+                        break;
+                    default: break;
                 }
-                else if (tags["msg"] == "resub")
+            }
+        }
+
+        private void ParseTwitchSubs(Dictionary<string, string> tags)
+        {
+            if (SubMessageData.IsSub || SubMessageData.IsResub)
+            {
+                if (tags.ContainsKey("msg-param-month"))
                 {
-                    IsResub = true;
+                    SubMessageData.SubMonths = long.Parse(tags["msg-param-month"]);
                 }
-                if (IsSub || IsResub)
+                if (tags.ContainsKey("msg-param-sub-plan-name"))
                 {
-                    if (tags.ContainsKey("msg-param-month"))
-                    {
-                        SubMonths = long.Parse(tags["msg-param-month"]);
-                    }
-                    if (tags.ContainsKey("msg-param-sub-plan-name"))
-                    {
-                        SubPlanName = tags["msg-param-sub-plan-name"];
-                    }
-                    if (tags.ContainsKey("msg-param-sub-plan"))
-                    {
-                        SubPlan = long.Parse(tags["msg-param-sub-plan"]);
-                    }
+                    SubMessageData.SubPlanName = tags["msg-param-sub-plan-name"];
                 }
+                if (tags.ContainsKey("msg-param-sub-plan"))
+                {
+                    SubMessageData.SubPlan = long.Parse(tags["msg-param-sub-plan"]);
+                }
+                if (tags.ContainsKey("msg-param-cumulative-month"))
+                {
+                    SubMessageData.SubCumulativeMonths = long.Parse(tags["msg-param-cumulative-month"]);
+                }
+                if (tags.ContainsKey("msg-param-multimonth-duration"))
+                {
+                    SubMessageData.SubMultiMonthsDuration = long.Parse(tags["msg-param-multimonth-duration"]);
+                }
+                if (tags.ContainsKey("msg-param-multimonth-tenure"))
+                {
+                    SubMessageData.SubMultiMonthsTenure = long.Parse(tags["msg-param-multimonth-tenure"]);
+                }
+                if (tags.ContainsKey("msg-param-should-share-streak"))
+                {
+                    SubMessageData.SubShouldShareStreak = tags["msg-param-should-share-streak"] == "1";
+                }
+                if (tags.ContainsKey("msg-param-was-gifted"))
+                {
+                    SubMessageData.SubWasGifted = tags["msg-param-was-gifted"] == "1";
+                }
+            }
+        }
+        private void ParseReplyData(Dictionary<string, string> tags)
+        {
+            if (tags.ContainsKey("reply-parent-display-name"))
+            {
+                ReplyMessageData.ParentDisplayName = tags["reply-parent-display-name"];
+            }
+            if (tags.ContainsKey("reply-parent-msg-body"))
+            {
+                ReplyMessageData.ParentMessageBody = Irc.IrcMessage.UnescapeTag(tags["reply-parent-msg-body"]);
+            }
+            if (tags.ContainsKey("reply-parent-msg-id"))
+            {
+                IsReply = true;
+                ReplyMessageData.ParentMessageId = tags["reply-parent-msg-id"];
+            }
+            if (tags.ContainsKey("reply-parent-user-id"))
+            {
+                ReplyMessageData.ParentUserId = long.Parse(tags["reply-parent-user-id"]);
+            }
+            if (tags.ContainsKey("reply-parent-user-login"))
+            {
+                ReplyMessageData.ParentUserLogin = tags["reply-parent-user-login"];
             }
         }
         private void ParseTwitchOtherSubsAndBits(Dictionary<string, string> tags)
@@ -222,12 +292,53 @@ namespace Twitch.Models
             {
                 case "mod": return TwitchUserTypes.Mod;
                 case "global_mod": return TwitchUserTypes.GlobalMod;
-                case "admin" : return TwitchUserTypes.Admin;
+                case "admin": return TwitchUserTypes.Admin;
                 case "staff": return TwitchUserTypes.Staff;
                 default: return TwitchUserTypes.None;
             }
         }
 
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (UserType.HasFlag(TwitchUserTypes.Citillara))
+                sb.AppendFormat("[C] ");
+            if (UserType.HasFlag(TwitchUserTypes.Developer))
+                sb.AppendFormat("[Developper] ");
+            if (UserType.HasFlag(TwitchUserTypes.Admin))
+                sb.AppendFormat("[Admin] ");
+            if (UserType.HasFlag(TwitchUserTypes.Broadcaster))
+                sb.AppendFormat("[Broadcaster] ");
+            if (UserType.HasFlag(TwitchUserTypes.GlobalMod))
+                sb.AppendFormat("[GlobalMod] ");
+            if (UserType.HasFlag(TwitchUserTypes.Staff))
+                sb.AppendFormat("[Staff] ");
+            if (UserType.HasFlag(TwitchUserTypes.Mod))
+                sb.AppendFormat("[Mod] ");
+            if (UserType.HasFlag(TwitchUserTypes.Subscriber))
+                sb.AppendFormat("[Sub {0}/{1}] ", SuscriberNumberOfMonths, SubscriberIconLevel);
+            if (IsVerified)
+                sb.AppendFormat("[Verified] ");
+            if (PartnerLevel != -1)
+                sb.AppendFormat("[Partner {0}] ", PartnerLevel);
+            if (IsVIP)
+                sb.AppendFormat("[VIP] ");
+            if (IsTurbo)
+                sb.AppendFormat("[Turbo] ");
+            if (IsPrime)
+                sb.AppendFormat("[Prime] ");
+            if (IsReply)
+                sb.AppendFormat("[Reply] ");
+            if (IsHighlighted)
+                sb.AppendFormat("[Highlight] ");
+            if (BitsLevel > 0)
+                sb.AppendFormat("[Bit Lv {0}] ", BitsLevel);
+            if (BitsSent > 0)
+                sb.AppendFormat("[Bit Sent {0}] ", BitsSent);
+
+            return sb.ToString();
+        }
 
     }
 
