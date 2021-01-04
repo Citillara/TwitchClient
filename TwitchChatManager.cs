@@ -67,6 +67,10 @@ namespace Twitch
             return retval;
         }
 
+        public TwitchRoomState ParseTwitchRoomStateFromIrc(IrcMessage args)
+        {
+            return new TwitchRoomState(args);
+        }
 
         public void OnModeChange(IrcClientOnModeEventArgs args)
         {

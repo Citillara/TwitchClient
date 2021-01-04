@@ -36,6 +36,9 @@ namespace Twitch
         public delegate void TwitchClientOnNoticeEventHandler(TwitchClient sender, TwitchNotice args);
         public event TwitchClientOnNoticeEventHandler OnNotice;
 
+        public delegate void TwitchClientOnRoomStateChangedEventHandler(TwitchClient sender, TwitchRoomState args);
+        public event TwitchClientOnRoomStateChangedEventHandler OnRoomStateChanged;
+
         public delegate void TwitchClientOnLogEventHandler(TwitchClient sender, IrcClientOnLogEventArgs args);
         public event TwitchClientOnLogEventHandler OnLog;
 
@@ -232,15 +235,19 @@ namespace Twitch
 
         void m_client_OnUnknownCommand(IrcClient sender, IrcMessage message)
         {
-            /*
             switch (message.Command)
             {
-                default:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(message);
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                case "ROOMSTATE":
+                    var state = m_TwitchChatManager.ParseTwitchRoomStateFromIrc(message);
+                    if (OnRoomStateChanged != null)
+                        OnRoomStateChanged(this, state);
                     break;
-            }*/
+                default:
+                    /*Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine(message);
+                    Console.ForegroundColor = ConsoleColor.Gray;*/
+                    break;
+            }
         }
 
         void m_client_OnQuit(IrcClient sender, IrcClientOnQuitEventArgs args)
