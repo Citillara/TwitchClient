@@ -1,4 +1,5 @@
-﻿using Irc;
+﻿//#define READONLY
+using Irc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -117,38 +118,50 @@ namespace Twitch
 
         public void SendWhisper(string channel, string message)
         {
+#if !READONLY
             if (m_Client.Status == IrcClient.State.Connected)
                 m_Client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
+#endif
         }
         public void SendWhisper(string destination, string format, params object[] arg)
         {
+#if !READONLY
             this.SendWhisper(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
+#endif
         }
 
         public void SendAction(string channel, string action)
         {
-            if(m_Client.Status == IrcClient.State.Connected)
+#if !READONLY
+            if (m_Client.Status == IrcClient.State.Connected)
                 m_Client.PrivMsg(channel, "\x0001ACTION {0}\x01", action);
 
 
             //m_client.PrivMsg(channel, "\x01 ACTION {0}\x01", action);
+#endif
         }
         public void SendAction(string destination, string format, params object[] arg)
         {
+#if !READONLY
             this.SendAction(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
+#endif
         }
 
         public void SendMessage(string channel, string message)
         {
+#if !READONLY
             if (m_Client.Status == IrcClient.State.Connected)
                 if (AutoDetectSendWhispers && !channel.StartsWith("#"))
                     SendWhisper(channel, message);
                 else 
                     m_Client.PrivMsg(channel, message);
+#endif
         }
         public void SendMessage(string destination, string format, params object[] arg)
         {
+#if !READONLY
             this.SendMessage(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
+#endif
         }
 
         /// <summary>
