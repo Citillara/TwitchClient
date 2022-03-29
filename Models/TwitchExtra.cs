@@ -302,7 +302,7 @@ namespace Twitch.Models
         {
             StringBuilder sb = new StringBuilder();
 
-            if (UserType.HasFlag(TwitchUserTypes.Citillara))
+            if (UserType.HasFlag(TwitchUserTypes.Founder))
                 sb.AppendFormat("[C] ");
             if (UserType.HasFlag(TwitchUserTypes.Developer))
                 sb.AppendFormat("[Developper] ");

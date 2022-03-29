@@ -17,6 +17,7 @@ namespace Twitch
         public TwitchChatManager()
         {
             botmasters.Add("lam0r_");
+            botmasters.Add("citibot");
         }
 
         public TwitchMessage ParseTwitchMessageFromIrc(IrcClientOnPrivateMessageEventArgs args)
@@ -35,7 +36,7 @@ namespace Twitch
             }
             if (args.Name.Equals("citillara"))
             {
-                retval.UserType |= TwitchUserTypes.Citillara;
+                retval.UserType |= TwitchUserTypes.Founder;
             }
 
 
@@ -60,7 +61,7 @@ namespace Twitch
             }
             if (retval.Login != null && retval.Login.Equals("citillara"))
             {
-                retval.UserType |= TwitchUserTypes.Citillara;
+                retval.UserType |= TwitchUserTypes.Founder;
             }
 
 

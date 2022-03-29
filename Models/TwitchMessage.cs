@@ -85,6 +85,17 @@ namespace Twitch.Models
             return sb.ToString();
         }
 
+
+        public string ToIRCColorString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("[{0}] ", Channel);
+            sb.Append("\x000314" + base.ToString());
+            sb.AppendFormat("\x00036" + " <{0}> ", SenderDisplayName);
+            sb.Append("\x00030 " + Message);
+            return sb.ToString();
+        }
+
         private void ParseCommandAndArgs()
         {
             m_args = Message.Split(' ');

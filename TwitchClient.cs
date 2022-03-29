@@ -17,7 +17,7 @@ namespace Twitch
     public class TwitchClient
     {
         private ManualResetEvent m_KeepAliveToken = new ManualResetEvent(false);
-        public static readonly string Version = "2";
+        public static readonly string Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Build.ToString();
         private IrcClient m_Client;
         private TwitchChatManager m_TwitchChatManager = new TwitchChatManager();
         private string m_Name;
@@ -39,6 +39,9 @@ namespace Twitch
 
         public delegate void TwitchClientOnRoomStateChangedEventHandler(TwitchClient sender, TwitchRoomState args);
         public event TwitchClientOnRoomStateChangedEventHandler OnRoomStateChanged;
+
+        public delegate void TwitchClientOnUserNoticeEventHandler(TwitchClient sender, TwitchUserNotice args);
+        public event TwitchClientOnUserNoticeEventHandler OnUserNotice;
 
         public delegate void TwitchClientOnLogEventHandler(TwitchClient sender, IrcClientOnLogEventArgs args);
         public event TwitchClientOnLogEventHandler OnLog;
@@ -144,6 +147,19 @@ namespace Twitch
         {
 #if !READONLY
             this.SendAction(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
+#endif
+        }
+
+        public void SendTimeout(string destination, string target, int time, string reason)
+        {
+#if !READONLY
+            m_Client.PrivMsg(destination, "/timeout {0} {1} {2}", target, time, reason);
+#endif
+        }
+        public void SendBan(string destination, string target, string reason)
+        {
+#if !READONLY
+            m_Client.PrivMsg(destination, "/ban {0} {1}", target, reason);
 #endif
         }
 
@@ -254,6 +270,8 @@ namespace Twitch
                     var state = m_TwitchChatManager.ParseTwitchRoomStateFromIrc(message);
                     if (OnRoomStateChanged != null)
                         OnRoomStateChanged(this, state);
+                    break;
+                case "USERNOTICE":
                     break;
                 default:
                     /*Console.ForegroundColor = ConsoleColor.Yellow;

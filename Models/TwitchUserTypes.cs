@@ -17,6 +17,6 @@ namespace Twitch.Models
         Broadcaster = 1 << 4,
         Admin = 1 << 5,
         Developer = 1 << 6,
-        Citillara = 1 << 7,
+        Founder = 1 << 7,
     }
 }

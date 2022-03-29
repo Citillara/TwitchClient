@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="API\ChatProperties.cs" />
     <Compile Include="Models\EventArgs.cs" />
+    <Compile Include="Models\TwitchUserNotice.cs" />
     <Compile Include="Models\TwitchNotice.cs" />
     <Compile Include="Models\TwitchRoomState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
