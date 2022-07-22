@@ -10,6 +10,10 @@ namespace Twitch.Models
 {
     public class TwitchExtra
     {
+        /*
+         * @badge-info=subscriber/20	badges=subscriber/12,bits/100	client-nonce=f730e7597ce30423be56e87a0e3bda04	color=#D2691E	display-name=OrangeJinjo	emotes=	first-msg=0	flags=0-8:P.3	id=3b84b2a5-401d-48b4-8b5d-fd265bf2df27	mod=0	returning-chatter=0	room-id=26261471	subscriber=1	tmi-sent-ts=1655840318180	turbo=0	user-id=38449705	user-type= :orangejinjo!orangejinjo@orangejinjo.tmi.twitch.tv PRIVMSG #asmongold :holy shit LuL
+[Debug] [21/06/2022 21:38:38] */
+
         public Color UserColor = SystemColors.WindowText;
         public string DisplayName;
         public string Login;
@@ -23,7 +27,10 @@ namespace Twitch.Models
         public long RoomId = -1;
         public long BitsLevel = -1;
         public long BitsSent = 0;
+        public long TwitchTimestamp = 0;
+        public DateTime TwitchTimestampDate { get { return UnixTimeStampToDateTime(TwitchTimestamp); } }
         public bool IsVerified = false;
+        public bool IsFirstMessage = false;
         public long PartnerLevel = -1;
         public TwitchUserTypes UserType = TwitchUserTypes.None;
         public string SystemMessage;
@@ -98,11 +105,18 @@ namespace Twitch.Models
             {
                 RoomId = long.Parse(tags["room-id"]);
             }
+            if (tags.ContainsKey("tmi-sent-ts"))
+            {
+                TwitchTimestamp = long.Parse(tags["tmi-sent-ts"]);
+            }
             if (tags.ContainsKey("user-type"))
             {
                 UserType = ParseType(tags["user-type"]);
             }
-
+            if (tags.ContainsKey("first-msg"))
+            {
+                IsFirstMessage = tags["first-msg"] == "1";
+            }
 
             if (tags.ContainsKey("msg"))
             {
@@ -340,7 +354,15 @@ namespace Twitch.Models
             return sb.ToString();
         }
 
+        public static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
+        {
+            DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            dateTime = dateTime.AddMilliseconds(unixTimeStamp).ToLocalTime();
+            return dateTime;
+        }
+
     }
+
 
     public static class Extensions
     {

@@ -11,13 +11,21 @@ namespace Twitch
 {
     class TwitchChatManager
     {
-        List<string> botmasters = new List<string>();
-        List<string> opslist = new List<string>();
+        readonly List<string> m_developers;
+        readonly List<string> m_founders;
+        List<string> m_oplist = new List<string>();
 
-        public TwitchChatManager()
+        public TwitchChatManager(string[] founders, string[] developers)
         {
-            botmasters.Add("lam0r_");
-            botmasters.Add("citibot");
+            if (founders == null)
+                m_founders = new List<string>();
+            else 
+                m_founders = new List<string>(founders);
+
+            if(m_developers == null)
+                m_developers = new List<string>();
+            else
+                m_developers = new List<string>(developers);
         }
 
         public TwitchMessage ParseTwitchMessageFromIrc(IrcClientOnPrivateMessageEventArgs args)
@@ -26,11 +34,11 @@ namespace Twitch
 
             TwitchMessage retval = new TwitchMessage(args);
 
-            if (opslist.Contains(key))
+            if (m_oplist.Contains(key))
             {
                 retval.UserType |= TwitchUserTypes.Mod;
             }
-            if (botmasters.Contains(args.Name))
+            if (m_developers.Contains(args.Name))
             {
                 retval.UserType |= TwitchUserTypes.Developer;
             }
@@ -51,15 +59,15 @@ namespace Twitch
 
 
 
-            if (retval.Login != null && opslist.Contains(key))
+            if (retval.Login != null && m_oplist.Contains(key))
             {
                 retval.UserType |= TwitchUserTypes.Mod;
             }
-            if (retval.Login != null &&  botmasters.Contains(retval.Login))
+            if (retval.Login != null && m_developers.Contains(retval.Login))
             {
                 retval.UserType |= TwitchUserTypes.Developer;
             }
-            if (retval.Login != null && retval.Login.Equals("citillara"))
+            if (retval.Login != null && m_founders.Contains(retval.Login))
             {
                 retval.UserType |= TwitchUserTypes.Founder;
             }
@@ -84,13 +92,13 @@ namespace Twitch
                     string name = string.Concat(args.Channel, md.Name);
                     if (md.IsAdded)
                     {
-                        if (!opslist.Contains(name))
-                            opslist.Add(name);
+                        if (!m_oplist.Contains(name))
+                            m_oplist.Add(name);
                     }
                     else
                     {
-                        if (opslist.Contains(name))
-                            opslist.Remove(name);
+                        if (m_oplist.Contains(name))
+                            m_oplist.Remove(name);
                     }
                 }
             }

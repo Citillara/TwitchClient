@@ -19,7 +19,7 @@ namespace Twitch
         private ManualResetEvent m_KeepAliveToken = new ManualResetEvent(false);
         public static readonly string Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Build.ToString();
         private IrcClient m_Client;
-        private TwitchChatManager m_TwitchChatManager = new TwitchChatManager();
+        private TwitchChatManager m_TwitchChatManager;
         private string m_Name;
         private bool hasBeenDisconnected = false;
         public string Name { get { return m_Name; } }
@@ -67,8 +67,10 @@ namespace Twitch
         public bool LogToConsole { get { return m_Client.LogToConsole; } set { m_Client.LogToConsole = value; } }
         public bool LogEnabled { get { return m_Client.LogEnabled; } set { m_Client.LogEnabled = value; } }
 
-        public TwitchClient(string nickname, string password)
+        public TwitchClient(string nickname, string password, string[] founders = null, string[] developers = null)
         {
+            m_TwitchChatManager = new TwitchChatManager(founders, developers);
+
             m_Client = new IrcClient("irc.chat.twitch.tv", 80, nickname);
             m_Name = nickname;
             m_Client.Password = password;
@@ -295,7 +297,10 @@ namespace Twitch
 
         void m_client_OnPerform(IrcClient sender)
         {
-            sender.CapabilityRequest("twitch.tv/membership");
+            if (OnJoin != null || OnPart != null)
+            {
+                sender.CapabilityRequest("twitch.tv/membership");
+            }
             sender.CapabilityRequest("twitch.tv/commands");
             sender.CapabilityRequest("twitch.tv/tags");
 
