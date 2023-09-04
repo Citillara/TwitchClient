@@ -317,7 +317,7 @@ namespace Twitch.Models
             StringBuilder sb = new StringBuilder();
 
             if (UserType.HasFlag(TwitchUserTypes.Founder))
-                sb.AppendFormat("[C] ");
+                sb.AppendFormat("[Founder] ");
             if (UserType.HasFlag(TwitchUserTypes.Developer))
                 sb.AppendFormat("[Developper] ");
             if (UserType.HasFlag(TwitchUserTypes.Admin))

@@ -42,7 +42,7 @@ namespace Twitch
             {
                 retval.UserType |= TwitchUserTypes.Developer;
             }
-            if (args.Name.Equals("citillara"))
+            if (m_founders.Contains(args.Name))
             {
                 retval.UserType |= TwitchUserTypes.Founder;
             }
