@@ -20,10 +20,12 @@ namespace Twitch
         public static readonly string Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Build.ToString();
         private IrcClient m_Client;
         private TwitchChatManager m_TwitchChatManager;
+        private Thread m_keepAliveThread;
         private string m_Name;
         private bool hasBeenDisconnected = false;
         public string Name { get { return m_Name; } }
-        
+        private static readonly char[] USERHOST_SIGNS = { '!', '@' };
+
 
         public delegate void TwitchClientOnPartEventHandler(TwitchClient sender, TwitchClientOnPartEventArgs args);
         public event TwitchClientOnPartEventHandler OnPart;
@@ -59,10 +61,10 @@ namespace Twitch
         public bool KeepAlive = true;
         public string KeepAliveChannel = "";
 
-        public Twitch.Models.MessageLevel LogLevel 
-        { 
-            get { return (Twitch.Models.MessageLevel)m_Client.LogLevel; } 
-            set { m_Client.LogLevel = (Irc.MessageLevel) value; } 
+        public Twitch.Models.MessageLevel LogLevel
+        {
+            get { return (Twitch.Models.MessageLevel)m_Client.LogLevel; }
+            set { m_Client.LogLevel = (Irc.MessageLevel)value; }
         }
         public bool LogToConsole { get { return m_Client.LogToConsole; } set { m_Client.LogToConsole = value; } }
         public bool LogEnabled { get { return m_Client.LogEnabled; } set { m_Client.LogEnabled = value; } }
@@ -76,7 +78,7 @@ namespace Twitch
             m_Client.Password = password;
             m_Client.OnChannelNickListRecived += m_client_OnChannelNickListRecived;
             m_Client.OnJoin += m_client_OnJoin;
-            if(KeepAlive)
+            if (KeepAlive)
                 m_Client.OnJoin += m_client_OnJoinKeepAlive;
             m_Client.OnLog += m_client_OnLog;
             m_Client.OnMode += m_client_OnMode;
@@ -102,7 +104,9 @@ namespace Twitch
             {
                 //Console.WriteLine("Starting keep alive");
                 m_Client.OnJoin -= m_client_OnJoinKeepAlive;
-                new Thread(new ThreadStart(KeepAliveLoop)).Start();
+                m_keepAliveThread = new Thread(new ThreadStart(KeepAliveLoop));
+                m_keepAliveThread.Name = "Keep alive thread";
+                m_keepAliveThread.Start();
             }
         }
 
@@ -119,20 +123,6 @@ namespace Twitch
             if (hasBeenDisconnected)
                 throw new ObjectDisposedException("Cannot reconnect after a disconnection. Create a new instance of the class");
             m_Client.Connect();
-        }
-
-        public void SendWhisper(string channel, string message)
-        {
-#if !READONLY
-            if (m_Client.Status == IrcClient.State.Connected)
-                m_Client.PrivMsg("#jtv", "/w {0} {1}", channel, message);
-#endif
-        }
-        public void SendWhisper(string destination, string format, params object[] arg)
-        {
-#if !READONLY
-            this.SendWhisper(destination, string.Format(Thread.CurrentThread.CurrentCulture, format, arg));
-#endif
         }
 
         public void SendAction(string channel, string action)
@@ -158,20 +148,14 @@ namespace Twitch
             m_Client.PrivMsg(destination, "/timeout {0} {1} {2}", target, time, reason);
 #endif
         }
-        public void SendBan(string destination, string target, string reason)
-        {
-#if !READONLY
-            m_Client.PrivMsg(destination, "/ban {0} {1}", target, reason);
-#endif
-        }
 
         public void SendMessage(string channel, string message)
         {
 #if !READONLY
             if (m_Client.Status == IrcClient.State.Connected)
                 if (AutoDetectSendWhispers && !channel.StartsWith("#"))
-                    SendWhisper(channel, message);
-                else 
+                    throw new NotImplementedException("Can no longer send whispers through this method");
+                else
                     m_Client.PrivMsg(channel, message);
 #endif
         }
@@ -210,23 +194,31 @@ namespace Twitch
 
         private void KeepAliveLoop()
         {
-            Console.WriteLine("[{0}] Started keep alive", DateTime.Now.ToString());
-            Random r = new Random();
-            string channel = "#" + m_Name.ToLowerInvariant();
-            if (!string.IsNullOrEmpty(KeepAliveChannel))
-                channel = KeepAliveChannel;
-
-            while (KeepAlive)
+            try
             {
-                SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
-/*#if DEBUG
-                File.AppendAllText("CitibotKeepAlive_" + Environment.MachineName + "-" + Process.GetCurrentProcess().Id.ToString() + ".log",
-                     "Keep alive : " + DateTime.UtcNow.ToString() + "\r\n");
-#endif*/
-                int wait = m_KeepAliveInterval * 1000;
-                m_LastKeepAlive = DateTime.Now;
-                m_KeepAliveToken.Reset();
-                m_KeepAliveToken.WaitOne(wait);
+                Console.WriteLine("[{0}] Started keep alive", DateTime.Now.ToString());
+                Random r = new Random();
+                string channel = "#" + m_Name.ToLowerInvariant();
+                if (!string.IsNullOrEmpty(KeepAliveChannel))
+                    channel = KeepAliveChannel;
+
+                while (KeepAlive)
+                {
+                    SendMessage(channel, "Keep alive : " + DateTime.UtcNow.ToString());
+                    /*#if DEBUG
+                                    File.AppendAllText("CitibotKeepAlive_" + Environment.MachineName + "-" + Process.GetCurrentProcess().Id.ToString() + ".log",
+                                         "Keep alive : " + DateTime.UtcNow.ToString() + "\r\n");
+                    #endif*/
+                    int wait = m_KeepAliveInterval * 1000;
+                    m_LastKeepAlive = DateTime.Now;
+                    m_KeepAliveToken.Reset();
+                    m_KeepAliveToken.WaitOne(wait);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[{0}] Keep alive exception", DateTime.Now.ToString());
+                Console.WriteLine(ex);
             }
         }
 
@@ -291,7 +283,7 @@ namespace Twitch
         void m_client_OnPrivateMessage(IrcClient sender, IrcClientOnPrivateMessageEventArgs args)
         {
             var message = m_TwitchChatManager.ParseTwitchMessageFromIrc(args);
-            if(OnMessage != null)
+            if (OnMessage != null)
                 OnMessage(this, message);
         }
 
@@ -310,7 +302,7 @@ namespace Twitch
 
         void m_client_OnPart(IrcClient sender, IrcClientOnPartEventArgs args)
         {
-            if(OnPart != null)
+            if (OnPart != null)
                 OnPart(this, new TwitchClientOnPartEventArgs(args.Name, args.Channel, m_Name.Equals(args.Name)));
         }
 
@@ -334,7 +326,7 @@ namespace Twitch
 
         void m_client_OnJoin(IrcClient sender, IrcClientOnJoinEventArgs args)
         {
-            if(OnJoin != null)
+            if (OnJoin != null)
                 OnJoin(this, new TwitchClientOnJoinEventArgs(args.Name, args.Channel, args.Name.ToLowerInvariant().Equals(m_Name.ToLowerInvariant())));
         }
 
@@ -359,7 +351,7 @@ namespace Twitch
 
         public enum RateLimitMode
         {
-            None, 
+            None,
         }
     }
 }
