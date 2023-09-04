@@ -154,7 +154,7 @@ namespace Twitch
 #if !READONLY
             if (m_Client.Status == IrcClient.State.Connected)
                 if (AutoDetectSendWhispers && !channel.StartsWith("#"))
-                    throw new NotImplementedException("Can no longer send whispers through this method");
+                    throw new NotSupportedException("Can no longer send whispers through this method");
                 else
                     m_Client.PrivMsg(channel, message);
 #endif
